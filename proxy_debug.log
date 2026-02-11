@@ -1,0 +1,9 @@
+2026-02-10T15:51:35.147Z [mis-sistemas] Handler started, method: GET
+2026-02-10T15:51:35.149Z [mis-sistemas] Fetching from backend: http://127.0.0.1:8003/api/authentication/mis-sistemas/
+2026-02-10T15:51:35.463Z [mis-sistemas] Backend responded with status: 500
+2026-02-10T15:51:44.713Z [mis-sistemas] Handler started, method: GET
+2026-02-10T15:51:44.714Z [mis-sistemas] Fetching from backend: http://127.0.0.1:8003/api/authentication/mis-sistemas/
+2026-02-10T15:51:45.098Z [mis-sistemas] Backend responded with status: 500
+2026-02-10T15:51:50.020Z [mis-sistemas] Handler started, method: GET
+2026-02-10T15:51:50.022Z [mis-sistemas] Fetching from backend: http://localhost:8003/api/authentication/mis-sistemas/
+2026-02-10T15:51:51.008Z [mis-sistemas] Backend responded with status: 500
