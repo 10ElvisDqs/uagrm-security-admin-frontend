@@ -23,6 +23,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             url = `${backendUrl}?${queryParams}`;
         }
 
+        console.log('Proxy Users Request:', {
+            url,
+            method: req.method,
+            cookies: req.cookies,
+            apiHeaders
+        });
+
         const apiRes = await fetch(url, {
             method: req.method,
             headers: {

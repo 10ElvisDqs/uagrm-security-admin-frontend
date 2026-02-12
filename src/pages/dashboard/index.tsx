@@ -78,7 +78,7 @@ export default function DashboardPage() {
                             key={sistema.id}
                             nombre={sistema.nombre}
                             descripcion={sistema.descripcion}
-                            url={sistema.url_frontend}
+                            url={sistema.url}
                             icono={sistema.icon}
                             color={sistema.color}
                         />
