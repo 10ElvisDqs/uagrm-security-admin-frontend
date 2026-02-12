@@ -6,8 +6,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
         const apiHeaders = forwardCookies(req);
+        const queryParams = new URLSearchParams(req.query as any).toString();
+        const url = queryParams ? `${backendUrl}?${queryParams}` : backendUrl;
         
-        const apiRes = await fetch(backendUrl, {
+        const apiRes = await fetch(url, {
             method: 'GET',
             headers: apiHeaders,
         });

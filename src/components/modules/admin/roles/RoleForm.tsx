@@ -33,12 +33,10 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
 
     const loadInitialData = async () => {
         try {
-            const [appsData, permsData] = await Promise.all([
-                getAplicaciones(),
-                getPermissions()
+            const [appsData] = await Promise.all([
+                getAplicaciones()
             ]);
             setApps(appsData);
-            setPermissions(permsData);
 
             if (role) {
                 const existingAssignments = await getGroupAplicacions(role.id);
@@ -59,6 +57,21 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
             console.error("Error loading initial data:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (selectedApp) {
+            loadPermissions(selectedApp.id);
+        }
+    }, [selectedApp]);
+
+    const loadPermissions = async (appId: string) => {
+        try {
+            const permsData = await getPermissions(appId);
+            setPermissions(permsData);
+        } catch (error) {
+            console.error("Error loading permissions:", error);
         }
     };
 
@@ -178,11 +191,8 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                             <div className="grid grid-cols-1 gap-3 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
                                 {permissions
                                     .filter(p => {
-                                        // Filtrar por sistema seleccionado (usando el código/slug como prefijo)
-                                        const systemPrefix = selectedApp ? `${selectedApp.slug}_` : '';
-                                        const matchesSystem = !selectedApp || p.codename.startsWith(systemPrefix);
                                         const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase());
-                                        return matchesSystem && matchesSearch;
+                                        return matchesSearch;
                                     })
                                     .map(perm => (
                                         <button

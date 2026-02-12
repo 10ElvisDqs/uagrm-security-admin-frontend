@@ -43,8 +43,9 @@ export const deleteRole = async (id: number | string): Promise<void> => {
     if (!res.ok) throw new Error('Failed to delete role');
 };
 
-export const getPermissions = async (): Promise<Permission[]> => {
-    const res = await fetch('/api/admin/permissions');
+export const getPermissions = async (aplicacionId?: string): Promise<Permission[]> => {
+    const url = aplicacionId ? `/api/admin/permissions?aplicacion=${aplicacionId}` : '/api/admin/permissions';
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch permissions');
     return res.json();
 };
@@ -69,4 +70,23 @@ export const getGroupAplicacions = async (roleId: string | number): Promise<Grou
     const res = await fetch(`/api/admin/roles/assign?group=${roleId}`);
     if (!res.ok) throw new Error('Failed to fetch group applications');
     return res.json();
+};
+
+export interface RolUniversal {
+    id: string;
+    nombre: string;
+    codigo: string;
+    descripcion: string;
+    nivel: number;
+}
+
+export const getRolesUniversales = async (): Promise<RolUniversal[]> => {
+    const res = await fetch('/api/admin/roles/universales');
+    if (!res.ok) throw new Error('Failed to fetch universal roles');
+    const data = await res.json();
+    console.log('Roles Universales Data:', data);
+    // Manejar tanto el caso de arreglo directo como el caso de objeto { results: [] }
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.results)) return data.results;
+    return [];
 };
