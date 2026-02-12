@@ -12,7 +12,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarPr
     const navigation = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Dispositivos', href: '/admin/devices', icon: Shield },
-        { name: 'Todos los Sistemas', href: '#', icon: Grid },
+        { name: 'Sistemas', href: '/admin/systems', icon: Grid },
         { name: 'Configuración', href: '/profile/security', icon: Settings },
     ];
 
