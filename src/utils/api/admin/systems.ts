@@ -64,6 +64,10 @@ export const syncPermissions = async (slug: string) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ aplicacion_slug: slug }),
     });
-    if (!res.ok) throw new Error('Failed to sync permissions');
-    return res.json();
+
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.message || data.error || 'Failed to sync permissions');
+    }
+    return data;
 };

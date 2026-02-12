@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { LayoutDashboard, Grid, Settings, ShieldCheck, Shield } from 'lucide-react';
+import { LayoutDashboard, Grid, Settings, ShieldCheck, Shield, Key } from 'lucide-react';
 
 interface AppSidebarProps {
     sidebarOpen: boolean;
@@ -13,6 +13,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarPr
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Dispositivos', href: '/admin/devices', icon: Shield },
         { name: 'Sistemas', href: '/admin/systems', icon: Grid },
+        { name: 'Roles', href: '/admin/roles', icon: Key },
         { name: 'Configuración', href: '/profile/security', icon: Settings },
     ];
 

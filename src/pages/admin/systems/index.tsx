@@ -79,7 +79,9 @@ export default function AdminSystemsPage() {
     const handleSync = async (slug: string) => {
         try {
             const res = await syncPermissions(slug);
-            alert(`Sincronización exitosa: ${res.resumen.total} permisos totales.`);
+            // El backend usa StandardAPIView que envuelve la respuesta en 'results'
+            const data = res.results || res;
+            alert(`Sincronización exitosa: ${data.resumen.total} permisos totales.`);
         } catch (error: any) {
             alert(`Error sincronizando: ${error.message}`);
         }
