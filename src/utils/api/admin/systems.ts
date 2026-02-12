@@ -26,13 +26,27 @@ export interface Aplicacion {
 
 export const getSistemas = async (): Promise<Sistema[]> => {
     const res = await fetch('/api/admin/systems');
-    if (!res.ok) throw new Error('Failed to fetch systems');
+    if (res.status === 401) {
+        if (typeof window !== 'undefined') window.location.href = '/login?expired=true';
+        return [];
+    }
+    if (!res.ok) {
+        console.error('Failed to fetch systems');
+        return [];
+    }
     return res.json();
 };
 
 export const getAplicaciones = async (): Promise<Aplicacion[]> => {
     const res = await fetch('/api/admin/apps');
-    if (!res.ok) throw new Error('Failed to fetch applications');
+    if (res.status === 401) {
+        if (typeof window !== 'undefined') window.location.href = '/login?expired=true';
+        return [];
+    }
+    if (!res.ok) {
+        console.error('Failed to fetch applications');
+        return [];
+    }
     return res.json();
 };
 
@@ -43,7 +57,10 @@ export const saveSistema = async (data: Partial<Sistema>): Promise<Sistema> => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error('Failed to save system');
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to save system');
+    }
     return res.json();
 };
 
@@ -54,7 +71,10 @@ export const saveAplicacion = async (data: Partial<Aplicacion>): Promise<Aplicac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error('Failed to save application');
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to save application');
+    }
     return res.json();
 };
 

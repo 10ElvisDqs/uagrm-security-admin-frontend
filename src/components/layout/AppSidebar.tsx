@@ -15,6 +15,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarPr
         { name: 'Sistemas', href: '/admin/systems', icon: Grid },
         { name: 'Usuarios', href: '/users', icon: Users },
         { name: 'Roles', href: '/admin/roles', icon: Key },
+        { name: 'Auditoría', href: '/admin/auditoria', icon: ShieldCheck },
         { name: 'Configuración', href: '/profile/security', icon: Settings },
     ];
 

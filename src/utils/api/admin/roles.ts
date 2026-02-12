@@ -12,7 +12,14 @@ export interface Permission {
 
 export const getRoles = async (): Promise<Role[]> => {
     const res = await fetch('/api/admin/roles');
-    if (!res.ok) throw new Error('Failed to fetch roles');
+    if (res.status === 401) {
+        if (typeof window !== 'undefined') window.location.href = '/login?expired=true';
+        return [];
+    }
+    if (!res.ok) {
+        console.error('Failed to fetch roles');
+        return [];
+    }
     return res.json();
 };
 
@@ -22,7 +29,10 @@ export const createRole = async (name: string): Promise<Role> => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
     });
-    if (!res.ok) throw new Error('Failed to create role');
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to create role');
+    }
     return res.json();
 };
 
@@ -46,7 +56,14 @@ export const deleteRole = async (id: number | string): Promise<void> => {
 export const getPermissions = async (aplicacionId?: string): Promise<Permission[]> => {
     const url = aplicacionId ? `/api/admin/permissions?aplicacion=${aplicacionId}` : '/api/admin/permissions';
     const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to fetch permissions');
+    if (res.status === 401) {
+        if (typeof window !== 'undefined') window.location.href = '/login?expired=true';
+        return [];
+    }
+    if (!res.ok) {
+        console.error('Failed to fetch permissions');
+        return [];
+    }
     return res.json();
 };
 
@@ -82,7 +99,14 @@ export interface RolUniversal {
 
 export const getRolesUniversales = async (): Promise<RolUniversal[]> => {
     const res = await fetch('/api/admin/roles/universales');
-    if (!res.ok) throw new Error('Failed to fetch universal roles');
+    if (res.status === 401) {
+        if (typeof window !== 'undefined') window.location.href = '/login?expired=true';
+        return [];
+    }
+    if (!res.ok) {
+        console.error('Failed to fetch universal roles');
+        return [];
+    }
     const data = await res.json();
     console.log('Roles Universales Data:', data);
     // Manejar tanto el caso de arreglo directo como el caso de objeto { results: [] }

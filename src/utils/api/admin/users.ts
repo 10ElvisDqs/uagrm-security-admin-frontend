@@ -25,7 +25,14 @@ export interface User {
 
 export const getUsers = async (): Promise<User[]> => {
     const res = await fetch('/api/admin/users');
-    if (!res.ok) throw new Error('Failed to fetch users');
+    if (res.status === 401) {
+        if (typeof window !== 'undefined') window.location.href = '/login?expired=true';
+        return [];
+    }
+    if (!res.ok) {
+        console.error('Failed to fetch users');
+        return [];
+    }
     return res.json();
 };
 
@@ -35,7 +42,10 @@ export const createUser = async (data: Partial<User> & { password?: string }): P
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error('Failed to create user');
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to create user');
+    }
     return res.json();
 };
 
