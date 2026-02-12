@@ -33,8 +33,20 @@ export default function DashboardLayout({ children, title = 'UAGRM' }: Dashboard
     useEffect(() => {
         if (isAuthenticated === false) {
             router.push('/login');
+            return;
         }
-    }, [isAuthenticated, router]);
+
+        // Protección de rutas administrativas
+        if (isAuthenticated && user && !user.is_superuser) {
+            const adminRoutes = ['/admin', '/users'];
+            const isRestrictedRoute = adminRoutes.some(route => router.pathname.startsWith(route));
+
+            if (isRestrictedRoute) {
+                console.warn(`[Security] Redireccionando usuario no autorizado de: ${router.pathname}`);
+                router.push('/dashboard');
+            }
+        }
+    }, [isAuthenticated, user, router]);
 
     if (!user) {
         return null; // o un spinner de carga
