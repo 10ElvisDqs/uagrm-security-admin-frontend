@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Shield, Layout, Search, Check, ChevronRight } from 'lucide-react';
 import { Role, Permission, getPermissions, getGroupAplicacions } from '@/utils/api/admin/roles';
-import { getSistemas, Sistema } from '@/utils/api/admin/systems';
+import { getAplicaciones, Aplicacion } from '@/utils/api/admin/systems';
 
 interface RoleFormProps {
     role?: Role | null;
@@ -12,11 +12,11 @@ interface RoleFormProps {
 
 export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
     const [name, setName] = useState(role?.name || '');
-    const [systems, setSystems] = useState<Sistema[]>([]);
+    const [apps, setApps] = useState<Aplicacion[]>([]);
     const [permissions, setPermissions] = useState<Permission[]>([]);
     // Mapa de aplicacionId -> lista de IDs de permisos
     const [localAssignments, setLocalAssignments] = useState<Record<string, number[]>>({});
-    const [selectedSystem, setSelectedSystem] = useState<Sistema | null>(null);
+    const [selectedApp, setSelectedApp] = useState<Aplicacion | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -33,11 +33,11 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
 
     const loadInitialData = async () => {
         try {
-            const [systemsData, permsData] = await Promise.all([
-                getSistemas(),
+            const [appsData, permsData] = await Promise.all([
+                getAplicaciones(),
                 getPermissions()
             ]);
-            setSystems(systemsData);
+            setApps(appsData);
             setPermissions(permsData);
 
             if (role) {
@@ -49,11 +49,11 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                 });
                 setLocalAssignments(map);
 
-                if (systemsData.length > 0) {
-                    setSelectedSystem(systemsData[0]);
+                if (appsData.length > 0) {
+                    setSelectedApp(appsData[0]);
                 }
-            } else if (systemsData.length > 0) {
-                setSelectedSystem(systemsData[0]);
+            } else if (appsData.length > 0) {
+                setSelectedApp(appsData[0]);
             }
         } catch (error) {
             console.error("Error loading initial data:", error);
@@ -67,11 +67,9 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
         try {
             setIsSaving(true);
             // Enviar todos los cambios realizados
-            // Por simplicidad ahora, enviaremos solo el sistema seleccionado actualmente si así está definido el onSave
-            // Pero idealmente onSave debería recibir el mapa completo.
             await onSave(name, {
                 assignments: localAssignments,
-                currentSystemId: selectedSystem?.id
+                currentSystemId: selectedApp?.id
             });
         } catch (error) {
             console.error("Error saving role:", error);
@@ -81,10 +79,10 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
     };
 
     const togglePermission = (permId: number) => {
-        if (!selectedSystem) return;
+        if (!selectedApp) return;
 
-        const systemId = selectedSystem.id;
-        const currentPerms = localAssignments[systemId] || [];
+        const appId = selectedApp.id;
+        const currentPerms = localAssignments[appId] || [];
 
         const newPerms = currentPerms.includes(permId)
             ? currentPerms.filter(id => id !== permId)
@@ -92,11 +90,11 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
 
         setLocalAssignments({
             ...localAssignments,
-            [systemId]: newPerms
+            [appId]: newPerms
         });
     };
 
-    const selectedPermissions = selectedSystem ? (localAssignments[selectedSystem.id] || []) : [];
+    const selectedPermissions = selectedApp ? (localAssignments[selectedApp.id] || []) : [];
 
     const modalContent = (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -131,16 +129,16 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                             <div>
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4 block">Aplicaciones Disponibles</label>
                                 <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
-                                    {systems.map(sys => (
+                                    {apps.map(app => (
                                         <button
-                                            key={sys.id}
-                                            onClick={() => setSelectedSystem(sys)}
-                                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all ${selectedSystem?.id === sys.id ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                            key={app.id}
+                                            onClick={() => setSelectedApp(app)}
+                                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all ${selectedApp?.id === app.id ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                                 }`}
                                         >
-                                            <span className="text-lg">{sys.icono}</span>
-                                            <span className="flex-1 text-left line-clamp-1">{sys.nombre}</span>
-                                            <ChevronRight size={14} className={selectedSystem?.id === sys.id ? 'opacity-100' : 'opacity-0'} />
+                                            <span className="text-lg">{app.icon}</span>
+                                            <span className="flex-1 text-left line-clamp-1">{app.nombre}</span>
+                                            <ChevronRight size={14} className={selectedApp?.id === app.id ? 'opacity-100' : 'opacity-0'} />
                                         </button>
                                     ))}
                                 </div>
@@ -156,7 +154,7 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                                     <Shield size={20} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-900">Permisos en {selectedSystem?.nombre}</h3>
+                                    <h3 className="font-bold text-slate-900">Permisos en {selectedApp?.nombre}</h3>
                                     <p className="text-xs text-slate-500 font-medium">Asigna privilegios específicos para este sistema.</p>
                                 </div>
                             </div>
@@ -181,8 +179,8 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                                 {permissions
                                     .filter(p => {
                                         // Filtrar por sistema seleccionado (usando el código/slug como prefijo)
-                                        const systemPrefix = selectedSystem ? `${selectedSystem.codigo}_` : '';
-                                        const matchesSystem = !selectedSystem || p.codename.startsWith(systemPrefix);
+                                        const systemPrefix = selectedApp ? `${selectedApp.slug}_` : '';
+                                        const matchesSystem = !selectedApp || p.codename.startsWith(systemPrefix);
                                         const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase());
                                         return matchesSystem && matchesSearch;
                                     })
