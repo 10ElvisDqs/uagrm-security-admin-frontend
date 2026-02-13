@@ -9,8 +9,8 @@ export const getValidImageUrl = (url: string | undefined | null): string | null 
         return `${backendUrl}${cleanPath}`;
     }
 
-    // If it's already a full valid URL, return it
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    // If it's already a full valid URL or a data URI, return it
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
         return url;
     }
 

@@ -1,5 +1,7 @@
 import { useRouter } from 'next/router';
-import { LayoutDashboard, Grid, Settings, ShieldCheck, Shield } from 'lucide-react';
+import { LayoutDashboard, Grid, Settings, ShieldCheck, Shield, Key, Users } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/reducers';
 
 interface AppSidebarProps {
     sidebarOpen: boolean;
@@ -8,13 +10,22 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarProps) {
     const router = useRouter();
+    const { user } = useSelector((state: RootState) => state.auth);
 
-    const navigation = [
+    const allNavigation = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-        { name: 'Dispositivos', href: '/admin/devices', icon: Shield },
-        { name: 'Todos los Sistemas', href: '#', icon: Grid },
+        { name: 'Dispositivos', href: '/admin/devices', icon: Shield, adminOnly: true },
+        { name: 'Sistemas', href: '/admin/systems', icon: Grid, adminOnly: true },
+        { name: 'Usuarios', href: '/users', icon: Users, adminOnly: true },
+        { name: 'Roles', href: '/admin/roles', icon: Key, adminOnly: true },
+        { name: 'Auditoría', href: '/admin/auditoria', icon: ShieldCheck, adminOnly: true },
         { name: 'Configuración', href: '/profile/security', icon: Settings },
     ];
+
+    const navigation = allNavigation.filter(item => {
+        if (item.adminOnly && !user?.is_superuser) return false;
+        return true;
+    });
 
     const isActive = (href: string) => {
         if (href === '#') return false;

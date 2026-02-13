@@ -5,8 +5,7 @@ interface Aplicaciones {
     icon: string;
     descripcion: string;
     color: string;
-    url_frontend: string;
-    url_backend: string;
+    url: string;
 }
 
 interface Rol {

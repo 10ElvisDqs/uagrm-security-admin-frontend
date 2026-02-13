@@ -14,8 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    // Call backend logout endpoint with /api/ prefix
-    const apiRes = await fetch(`${process.env.API_URL}/api/sso/logout/`, {
+    // Call backend logout endpoint
+    const apiRes = await fetch(`${process.env.API_URL}/api/authentication/logout/`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',

@@ -29,6 +29,18 @@ export default function LoginPage() {
   const dispatch: ThunkDispatch<any, any, UnknownAction> = useDispatch();
   const router = useRouter();
 
+  // Alertar si la sesión expiró
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('expired') === 'true') {
+        setTimeout(() => {
+          ToastError('Tu sesión ha expirado por seguridad o inactividad. Por favor, reingresa.');
+        }, 500);
+      }
+    }
+  });
+
   const handleOnSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 

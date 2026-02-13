@@ -43,8 +43,15 @@ export const getDevices = async (): Promise<UserDevice[]> => {
     credentials: "include",
   });
 
+  if (response.status === 401) {
+    // Session expired
+    if (typeof window !== 'undefined') window.location.href = '/login?expired=true';
+    return [];
+  }
+
   if (!response.ok) {
-    throw new Error("Failed to fetch devices");
+    console.error("Failed to fetch devices:", await response.text());
+    return [];
   }
 
   const data = await response.json();
@@ -65,7 +72,8 @@ export const authorizeDevice = async (deviceId: string): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to authorize device");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || "Failed to authorize device");
   }
 };
 
@@ -82,6 +90,7 @@ export const revokeDevice = async (deviceId: string): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to revoke device");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || errorData.message || "Failed to revoke device");
   }
 };
