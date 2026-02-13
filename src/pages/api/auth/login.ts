@@ -7,7 +7,7 @@ type Data = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
-  
+  console.log('Login API called');
   if (req.method !== 'POST') {
     return res.status(405).json({
       error: `Method ${req.method} not allowed`,
