@@ -36,6 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const data = await apiRes.json();
 
     if (apiRes.status === 200) {
+      console.log('Login successful, processing tokens if present', data.results);
       const { access, refresh, otp_required } = data.results;
 
       if (!otp_required && access && refresh) {
@@ -61,6 +62,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
     }
 
+    if (apiRes.status === 409) {
+      return res.status(apiRes.status).json({
+        error: data?.results || 'Dispositivo ya tiene una sesión activa',
+      });
+    }
+    
     return res.status(apiRes.status).json({
       error: data?.detail || 'Error del servidor.',
     });
