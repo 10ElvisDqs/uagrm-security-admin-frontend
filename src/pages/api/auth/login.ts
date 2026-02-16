@@ -10,12 +10,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   console.log('Login API called');
   if (req.method !== 'POST') {
     return res.status(405).json({
-      error: `Method ${req.method} not allowed`,
+      error: `Metodo ${req.method} no permitido`,
     });
   }
 
   try {
     const { 'hash-device': hashDevice } = req.body;
+    console.log('Hash Device:', req.body);
     
     // Choose endpoint based on Device Hash presence
     const endpoint = hashDevice 
@@ -50,22 +51,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     if (apiRes.status === 401) {
       return res.status(apiRes.status).json({
-        error: data?.detail || 'Invalid credentials',
+        error: data?.detail || 'Credenciales no válidas',
       });
     }
 
     if (apiRes.status === 403) {
       return res.status(apiRes.status).json({
-        error: data?.detail || 'Access forbidden',
+        error: data?.detail || 'Acceso denegado',
       });
     }
 
     return res.status(apiRes.status).json({
-      error: data?.detail || 'Server error.',
+      error: data?.detail || 'Error del servidor.',
     });
   } catch (err) {
     return res.status(500).json({
-      error: 'Something went wrong',
+      error: 'Algo salió mal al conectar con el servidor.',
     });
   }
 }
