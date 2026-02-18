@@ -31,13 +31,14 @@ export default function SistemaCard({
             if (response.ok) {
                 const { sso_access_token, sso_refresh_token } = await response.json();
                 
-                // 🔗 Construir URL con tokens (ya cifrados)
-                const targetUrl = new URL(url);
-                targetUrl.searchParams.set('sso_access_token', sso_access_token);
-                targetUrl.searchParams.set('sso_refresh_token', sso_refresh_token);
+                // 🔗 Construir URL al endpoint de SSO del sistema externo
+                const ssoUrl = new URL(`${url}/sso-callback`);
+                ssoUrl.searchParams.set('access_token', sso_access_token);
+                ssoUrl.searchParams.set('refresh_token', sso_refresh_token);
                 
-                // 🚀 Redirigir a aplicación externa
-                window.open(targetUrl.toString(), '_blank', 'noopener,noreferrer');
+                // 🚀 Redirigir a sistema externo
+                // El sistema externo guardará los tokens en SUS cookies
+                window.open(ssoUrl.toString(), '_blank', 'noopener,noreferrer');
             } else {
                 console.error('Error obteniendo tokens SSO');
                 alert('Error al acceder al sistema. Por favor, intenta nuevamente.');

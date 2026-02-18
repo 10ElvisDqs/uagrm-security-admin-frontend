@@ -44,7 +44,11 @@ export const createUser = async (data: Partial<User> & { password?: string }): P
     });
     if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.message || 'Failed to create user');
+        console.error('Error creating user:', {
+            status: res.status,
+            error: errorData,
+        });
+        throw new Error(errorData.error || errorData.message || 'No se pudo crear el usuario');
     }
     return res.json();
 };

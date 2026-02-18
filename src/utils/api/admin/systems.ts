@@ -58,9 +58,19 @@ export const saveSistema = async (data: Partial<Sistema>): Promise<Sistema> => {
         body: JSON.stringify(data),
     });
     if (!res.ok) {
+        console.log("Status:", res.status);
+        console.log("StatusText:", res.statusText);
+
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.message || 'Failed to save system');
+        console.log("ErrorData:", errorData);
+
+        throw new Error(
+            errorData.error ||
+            errorData.message ||
+            `Error ${res.status}`
+        );
     }
+
     return res.json();
 };
 
@@ -71,9 +81,11 @@ export const saveAplicacion = async (data: Partial<Aplicacion>): Promise<Aplicac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
+    console.log('Saving application with data:', data, 'Using method:', method);
+    
     if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.message || 'Failed to save application');
+        throw new Error(errorData.error || errorData.message || 'No se pudo guardar la aplicación');
     }
     return res.json();
 };
@@ -87,7 +99,7 @@ export const syncPermissions = async (slug: string) => {
 
     const data = await res.json();
     if (!res.ok) {
-        throw new Error(data.message || data.error || 'Failed to sync permissions');
+        throw new Error(data.message || data.error || 'No se pudieron sincronizar los permisos');
     }
     return data;
 };

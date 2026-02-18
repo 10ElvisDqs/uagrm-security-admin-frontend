@@ -9,7 +9,6 @@ import * as cookie from 'cookie';
  */
 export function forwardCookies(req: NextApiRequest): HeadersInit {
     const cookieHeader = req.headers.cookie || '';
-    
     let cookies: Record<string, string | undefined> = {};
     try {
         cookies = cookie.parse(cookieHeader);

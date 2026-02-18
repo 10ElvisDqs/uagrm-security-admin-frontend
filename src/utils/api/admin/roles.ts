@@ -80,7 +80,7 @@ export const assignPermissionsToGroup = async (data: GroupAplicacion): Promise<v
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error('Failed to assign permissions');
+    if (!res.ok) throw new Error('No se pudieron asignar permisos');
 };
 
 export const getGroupAplicacions = async (roleId: string | number): Promise<GroupAplicacion[]> => {

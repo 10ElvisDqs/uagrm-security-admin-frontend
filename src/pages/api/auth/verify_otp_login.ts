@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       const isProduction = process.env.NODE_ENV === 'production';
       res.setHeader('Set-Cookie', [
         `sso_access_token=${access}; HttpOnly; Path=/; SameSite=Lax${isProduction ? '; Secure' : ''}; Max-Age=2592000`,
-        `sso_refresh_token=${refresh}; HttpOnly; Path=/; SameSite=Lax${isProduction ? '; Secure' : ''}; Max-Age=5184000`,
+        `sso_refresh_token=${refresh}; HttpOnly; Path=/; SameSite=Lax${isProduction ? '; Secure' : ''}; Max-Age=604800`,
       ]);
     }
 
