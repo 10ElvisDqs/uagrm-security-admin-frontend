@@ -66,7 +66,7 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-
+      console.log('Login response:', res.status, data);
       if (res.status === 200) {
         if (data.results.otp_required) {
           setStep(2);
