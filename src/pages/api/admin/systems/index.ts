@@ -3,7 +3,8 @@ import { forwardCookies } from '../../../../utils/cookies/forwardCookies';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { method } = req;
-    const backendUrl = `${process.env.API_URL}/api/authorization/sistemas/`;
+    const backendUrl = `${process.env.API_URL}/api/authorization/apps
+    /`;
 
     try {
         const apiHeaders = forwardCookies(req);

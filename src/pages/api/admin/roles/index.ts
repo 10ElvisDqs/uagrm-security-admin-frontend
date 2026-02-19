@@ -10,8 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
         const apiHeaders = forwardCookies(req);
-        console.log(`[Roles Proxy] Fetching from: ${backendUrl}`);
-        console.log(`[Roles Proxy] Auth Header Present: ${!!apiHeaders['Authorization'] || !!(apiHeaders as any)['Authorization']}`);
         
         const fetchOptions: any = {
             method,
@@ -26,7 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         const apiRes = await fetch(backendUrl, fetchOptions);
-        console.log(`[Roles Proxy] Backend Status: ${apiRes.status}`);
 
         if (apiRes.status === 204) {
             return res.status(204).end();

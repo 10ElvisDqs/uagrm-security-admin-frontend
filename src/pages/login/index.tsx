@@ -187,7 +187,7 @@ export default function LoginPage() {
 
               {!isAgentActive && (
                 <div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-red-500/10 p-2 text-red-400 border border-red-500/20">
-                  <ShieldCheck size={18} />
+                  <ShieldAlert size={18} />
                   <span className="text-xs font-semibold">Agente de Seguridad Inactivo</span>
                 </div>
               )}

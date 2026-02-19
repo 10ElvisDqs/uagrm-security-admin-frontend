@@ -55,7 +55,7 @@ export const register = (props: IRegisterProps) => async (dispatch: Dispatch) =>
       dispatch({
         type: SIGNUP_SUCCESS,
       });
-      ToastSuccess('We have sent you an email, please click the link to verify your account.');
+      ToastSuccess('Hemos enviado un correo electrónico, por favor haga clic en el enlace para verificar su cuenta.');
     } else {
       dispatch({
         type: SIGNUP_FAIL,
@@ -65,7 +65,7 @@ export const register = (props: IRegisterProps) => async (dispatch: Dispatch) =>
       } else if (data.username && data.username.length > 0) {
         ToastError(data.username[0]);
       } else {
-        ToastError('An unknown error occurred.');
+        ToastError('Ocurrió un error desconocido.');
       }
     }
   } catch (err) {
@@ -96,12 +96,12 @@ export const activate = (props: IActivationProps) => async (dispatch: Dispatch) 
       dispatch({
         type: ACTIVATION_SUCCESS,
       });
-      ToastSuccess('Your account has been activated, you may now login.');
+      ToastSuccess('Su cuenta ha sido activada, ahora puede iniciar sesión.');
     } else {
       dispatch({
         type: ACTIVATION_FAIL,
       });
-      ToastError('There was an error activating your account.');
+      ToastError('Hubo un error al activar su cuenta.');
     }
   } catch (err) {
     dispatch({
@@ -127,12 +127,12 @@ export const resendActivation = (props: IResendActivationProps) => async () => {
     });
 
     if (res.status === 204) {
-      ToastSuccess('We have sent you an email to activate your account.');
+      ToastSuccess('Hemos enviado un correo electrónico para activar su cuenta.');
     } else {
-      ToastError('There was an error resending the activation email.');
+      ToastError('Hubo un error al reenviar el correo de activación.');
     }
   } catch (err) {
-    ToastError('Unexpected error');
+    ToastError('Error inesperado');
   }
 };
 
@@ -153,12 +153,12 @@ export const forgotPassword = (props: IForgotPasswordProps) => async () => {
     });
 
     if (res.status === 204) {
-      ToastSuccess('We have sent you an email to reset your password.');
+      ToastSuccess('Hemos enviado un correo electrónico para restablecer su contraseña.');
     } else {
-      ToastError('There was an error resending the activation email.');
+      ToastError('Hubo un error al reenviar el correo de restablecimiento de contraseña.');
     }
   } catch (err) {
-    ToastError('Unexpected error');
+    ToastError('Error inesperado');
   }
 };
 
@@ -182,12 +182,12 @@ export const forgotPasswordConfirm = (props: IForgotPasswordConfirmProps) => asy
     });
 
     if (res.status === 204) {
-      ToastSuccess('Your password has been reset, you may now login.');
+      ToastSuccess('Su contraseña ha sido restablecida, ahora puede iniciar sesión.');
     } else {
-      ToastError('There was an error resending the activation email.');
+      ToastError('Hubo un error al restablecer su contraseña.');
     }
   } catch (err) {
-    ToastError('Unexpected error');
+    ToastError('Error inesperado');
   }
 };
 
@@ -211,7 +211,7 @@ export const loadUser = () => async (dispatch: Dispatch) => {
       dispatch({
         type: LOAD_USER_FAIL,
       });
-      ToastError('Error loading user information.');
+      ToastError('Error al cargar la información del usuario.');
     }
   } catch (err) {
     dispatch({
@@ -265,14 +265,13 @@ export const login =
         dispatch({
           type: LOGIN_SUCCESS,
         });
-        await dispatch(loadUser());
-        await dispatch(loadProfile());
-        ToastSuccess('Login successfull!');
+        await Promise.all([dispatch(loadUser()), dispatch(loadProfile())]);
+        ToastSuccess('Login exitoso!');
       } else {
         dispatch({
           type: LOGIN_FAIL,
         });
-        ToastError('Login failed please verify your email and password');
+        ToastError('Error al iniciar sesión, verifique su correo electrónico y contraseña.');
       }
     } catch (err) {
       dispatch({
@@ -340,6 +339,6 @@ export const logout = () => async (dispatch: Dispatch) => {
       });
     }
   } catch (err) {
-    ToastError('Could not log out');
+    ToastError('No se pudo cerrar la sesión');
   }
 };

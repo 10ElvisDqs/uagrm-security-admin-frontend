@@ -24,8 +24,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       'force-login': forceLogin 
     } = req.body;
 
-    console.log('Hash Device recibido:', hashDevice ? '✅ presente' : '❌ ausente');
-
     // Elegir endpoint según si tiene hash de dispositivo
     const endpoint = hashDevice
       ? '/api/authentication/secure-device-login/'
@@ -48,7 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     const data = await apiRes.json();
-    console.log('Respuesta backend status:', data.results);
 
     // ✅ LOGIN EXITOSO
     if (apiRes.status === 200) {

@@ -108,7 +108,6 @@ export const getRolesUniversales = async (): Promise<RolUniversal[]> => {
         return [];
     }
     const data = await res.json();
-    console.log('Roles Universales Data:', data);
     // Manejar tanto el caso de arreglo directo como el caso de objeto { results: [] }
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data.results)) return data.results;

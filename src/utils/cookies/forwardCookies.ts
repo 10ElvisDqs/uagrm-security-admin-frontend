@@ -33,8 +33,6 @@ export function forwardCookies(req: NextApiRequest): HeadersInit {
         headers['Cookie'] = cookieHeader;
     }
 
-    console.log(`[forwardCookies] Path: ${req.url}, Token: ${accessToken ? 'YES' : 'NO'}`);
-
     return headers;
 }
 

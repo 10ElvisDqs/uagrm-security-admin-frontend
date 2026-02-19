@@ -15,8 +15,7 @@ export const useDeviceHash = () => {
         // Intentar conectar con el Agente Local (timeout corto)
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
-
-        const response = await fetch('http://localhost:8888/status', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SECURITY_AGENT_URL}`, {
           signal: controller.signal
         });
         

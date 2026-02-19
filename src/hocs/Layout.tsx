@@ -13,14 +13,15 @@ interface PageProps {
 
 export default function Layout({ children }: PageProps) {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const user = useSelector((state: RootState) => state.auth.user); // 👈 Agrega esto
   const dispatch: ThunkDispatch<any, any, UnknownAction> = useDispatch();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !user) { // 👈 Guard: solo si no hay usuario cargado
       dispatch(loadUser());
       dispatch(loadProfile());
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, user]);
 
   return (
     <div>
