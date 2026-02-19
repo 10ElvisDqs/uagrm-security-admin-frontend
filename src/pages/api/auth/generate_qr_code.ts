@@ -19,10 +19,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       data = await apiRes.json();
     } catch (jsonErr) {
-      return res.status(apiRes.status).json({ error: 'Invalid response from backend' });
+      return res.status(apiRes.status).json({ error: 'Respuesta no válida del backend' });
     }
     return res.status(apiRes.status).json(data);
   } catch (err) {
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Error Interno del Servidor' });
   }
 }

@@ -1,5 +1,8 @@
 import { useRouter } from 'next/router';
-import { LayoutDashboard, Grid, Settings, ShieldCheck, Shield, Key, Users } from 'lucide-react';
+import { LayoutDashboard, Grid, Settings, ShieldCheck, Shield, Key, Users, IdCard } from 'lucide-react';
+
+<IdCard size={20} />
+
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/reducers';
 
@@ -19,6 +22,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarPr
         { name: 'Usuarios', href: '/users', icon: Users, adminOnly: true },
         { name: 'Roles', href: '/admin/roles', icon: Key, adminOnly: true },
         { name: 'Auditoría', href: '/admin/auditoria', icon: ShieldCheck, adminOnly: true },
+        { name: 'Información Personal', href: '/profile', icon: IdCard, adminOnly: false },
         { name: 'Configuración', href: '/profile/security', icon: Settings },
     ];
 
@@ -28,10 +32,15 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarPr
     });
 
     const isActive = (href: string) => {
-        if (href === '#') return false;
-        if (href === '/profile/security' && router.pathname.startsWith('/profile')) return true;
+        if (href === '/dashboard') return router.pathname.startsWith('/dashboard');
         return router.pathname === href;
     };
+
+    // const isActive = (href: string) => {
+    //     if (href === '#') return false;
+    //     if (href === '/profile/security' && router.pathname.startsWith('/profile')) return true;
+    //     return router.pathname === href;
+    // };
 
     return (
         <>

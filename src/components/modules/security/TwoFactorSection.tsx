@@ -30,6 +30,7 @@ export default function TwoFactorSection() {
             const res = await generateQRCode();
             const data = await res.json();
             if (res.status === 200) {
+                console.log('QR Code URL:', data.results);
                 setQrUrl(data.results);
                 setShowQR(true);
             } else {

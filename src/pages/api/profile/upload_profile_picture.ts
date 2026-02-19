@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         'Content-Type': req.headers['content-type'] || 'application/json',
         ...forwardCookies(req),
       },
-      body: req.body,
+      body: JSON.stringify(req.body),
     });
 
     const data = await apiRes.json();
@@ -38,11 +38,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       return res.status(200).json(data);
     }
     return res.status(apiRes.status).json({
-      error: data?.detail || 'Error uploading profile picture',
+      error: data?.detail || 'Error al cargar la foto de perfil',
     });
   } catch (err) {
     return res.status(500).json({
-      error: 'Something went wrong',
+      error: 'Error al cargar la foto de perfil',
     });
   }
 }

@@ -20,6 +20,7 @@ export default function AppHeader({ title, setSidebarOpen }: AppHeaderProps) {
     const dispatch: ThunkDispatch<any, any, UnknownAction> = useDispatch();
 
     const user = useSelector((state: RootState) => state.auth.user);
+    console.log('User en AppHeader:', user);
     const profile = useSelector((state: RootState) => state.auth.profile);
 
     const handleLogout = () => {
@@ -53,7 +54,7 @@ export default function AppHeader({ title, setSidebarOpen }: AppHeaderProps) {
                     >
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-bold text-slate-800">{user?.first_name || 'Usuario'}</p>
-                            <p className="text-xs text-slate-500 uppercase tracking-tighter">Administrador</p>
+                            <p className="text-xs text-slate-500 uppercase tracking-tighter">{user?.role || 'user'}</p>
                         </div>
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 ring-2 ring-white overflow-hidden shadow-inner">
                             {getValidImageUrl(profile?.profile_picture?.url) ? (

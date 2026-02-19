@@ -31,8 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       ? '/api/authentication/secure-device-login/'
       : '/api/authentication/sso-login/';
 
-    console.log('Usando endpoint:', endpoint);
-
     const apiRes = await fetch(`${process.env.API_URL}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -50,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     const data = await apiRes.json();
-    console.log('Respuesta backend status:', apiRes.status);
+    console.log('Respuesta backend status:', data.results);
 
     // ✅ LOGIN EXITOSO
     if (apiRes.status === 200) {
@@ -106,8 +104,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       });
     }
 
-    // 🔴 Otros errores del servidor
-    console.error('Error inesperado del backend:', apiRes.status, data);
     return res.status(apiRes.status).json({
       error: data?.detail || data?.error || 'Error del servidor.',
     });

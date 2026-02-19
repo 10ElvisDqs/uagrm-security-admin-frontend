@@ -74,7 +74,6 @@ export default function Page() {
     setProfilePicture,
     percentage: profilePicturePerceentage,
     setPercentage: setProfilePicturePercentage,
-    // loading: loadingProfilePicture,
   } = useProfilePicture();
 
   const {
@@ -82,7 +81,6 @@ export default function Page() {
     setBannerPicture,
     percentage: bannerPicturePercentage,
     setPercentage: setBannerPicturePercentage,
-    // loading: loadingBannerPicture,
   } = useBannerPicture();
 
   const onLoadProfilePicture = (newImage: any) => {
@@ -99,7 +97,6 @@ export default function Page() {
     }
   };
 
-  // Rellenar el estado con datos iniciales de usuario
   useEffect(() => {
     if (user) {
       setUsername(user?.username);
@@ -122,12 +119,9 @@ export default function Page() {
     }
   }, [user, profile]);
 
-  // Detectar cambios
-  // Check if profile data has changes and is valid
   const isValidDate = (date: string) => !Number.isNaN(new Date(date).getTime());
   const isValidUrl = (url: string) => validator.isURL(url, { require_protocol: false });
   const isEmpty = (str: string) => {
-    // Strip all HTML tags and trim whitespace
     const cleanedContent = str.replace(/<[^>]*>/g, '').trim();
     return cleanedContent === '';
   };
@@ -183,118 +177,76 @@ export default function Page() {
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleSaveUserData = async () => {
-    // Iniciar objeto vacio para mandar datos
     const updatedData: Record<string, string> = {};
 
-    // Comparar el estado actual con el estado original
-    if (username !== user?.username) {
-      updatedData.username = username;
-    }
-    if (firstName !== user?.first_name) {
-      updatedData.first_name = firstName;
-    }
-    if (lastName !== user?.last_name) {
-      updatedData.last_name = lastName;
-    }
+    if (username !== user?.username) updatedData.username = username;
+    if (firstName !== user?.first_name) updatedData.first_name = firstName;
+    if (lastName !== user?.last_name) updatedData.last_name = lastName;
 
-    // Revisar si hay algo para guardar
     if (Object.keys(updatedData).length === 0) {
-      ToastWarning('No changes to save.');
+      ToastWarning('Sin cambios para guardar.');
       return;
     }
 
     try {
-      // Hacer PUT request con datos actualizados
       const response = await fetch('/api/user/update', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData),
       });
 
       if (response.ok) {
-        ToastSuccess('User data updated successfully');
-        // Actualizar el estado de redux
+        ToastSuccess('Datos de usuario actualizados correctamente');
         await dispatch(loadUser());
       } else {
-        ToastError('Failed to update user data');
+        ToastError('Error al actualizar los datos de usuario');
       }
     } catch (error) {
-      ToastError('An error occurred while updating user data');
+      ToastError('Ocurrió un error al actualizar los datos de usuario');
     }
   };
 
   const handleSaveProfileData = async () => {
-    // Iniciar objeto vacio para mandar datos
     const updatedData: Record<string, string> = {};
 
-    // Comparar el estado actual con el estado original
-    if (biography !== profile?.biography) {
-      updatedData.biography = biography;
-    }
-    if (birthday !== profile?.birthday) {
-      updatedData.birthday = birthday;
-    }
-    if (website !== profile?.website) {
-      updatedData.website = website;
-    }
-    if (instagram !== profile?.instagram) {
-      updatedData.instagram = instagram;
-    }
-    if (facebook !== profile?.facebook) {
-      updatedData.facebook = facebook;
-    }
-    if (threads !== profile?.threads) {
-      updatedData.threads = threads;
-    }
-    if (linkedin !== profile?.linkedin) {
-      updatedData.linkedin = linkedin;
-    }
-    if (youtube !== profile?.youtube) {
-      updatedData.youtube = youtube;
-    }
-    if (tiktok !== profile?.tiktok) {
-      updatedData.tiktok = tiktok;
-    }
-    if (github !== profile?.github) {
-      updatedData.github = github;
-    }
-    if (gitlab !== profile?.gitlab) {
-      updatedData.gitlab = gitlab;
-    }
+    if (biography !== profile?.biography) updatedData.biography = biography;
+    if (birthday !== profile?.birthday) updatedData.birthday = birthday;
+    if (website !== profile?.website) updatedData.website = website;
+    if (instagram !== profile?.instagram) updatedData.instagram = instagram;
+    if (facebook !== profile?.facebook) updatedData.facebook = facebook;
+    if (threads !== profile?.threads) updatedData.threads = threads;
+    if (linkedin !== profile?.linkedin) updatedData.linkedin = linkedin;
+    if (youtube !== profile?.youtube) updatedData.youtube = youtube;
+    if (tiktok !== profile?.tiktok) updatedData.tiktok = tiktok;
+    if (github !== profile?.github) updatedData.github = github;
+    if (gitlab !== profile?.gitlab) updatedData.gitlab = gitlab;
 
-    // Revisar si hay algo para guardar
     if (Object.keys(updatedData).length === 0) {
-      ToastWarning('No changes to save.');
+      ToastWarning('Sin cambios para guardar.');
       return;
     }
 
     try {
-      // Hacer PUT request con datos actualizados
       const response = await fetch('/api/profile/update', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData),
       });
 
       if (response.ok) {
-        ToastSuccess('Profile data updated successfully');
-        // Actualizar el estado de redux
+        ToastSuccess('Perfil actualizado correctamente');
         await dispatch(loadProfile());
       } else {
-        ToastError('Failed to update profile data');
+        ToastError('Error al actualizar el perfil');
       }
     } catch (error) {
-      ToastError('An error occurred while updating profile data');
+      ToastError('Ocurrió un error al actualizar el perfil');
     }
   };
 
   const handleSaveProfilePicture = async () => {
     if (!profilePicture.file) {
-      ToastError('No file selected for upload');
+      ToastError('No hay ningún archivo seleccionado');
       return null;
     }
 
@@ -310,9 +262,7 @@ export default function Page() {
       });
 
       const uploadResponse = await axios.put(presignedUrl, file, {
-        headers: {
-          'Content-Type': file.type,
-        },
+        headers: { 'Content-Type': file.type },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentage = Math.floor((progressEvent.loaded / progressEvent.total) * 100);
@@ -322,21 +272,16 @@ export default function Page() {
       });
 
       if (uploadResponse.status === 200) {
-        const backendResponse = await uploadProfilePicture({
-          key: fileKey,
-          title,
-          size,
-          type,
-        });
+        const backendResponse = await uploadProfilePicture({ key: fileKey, title, size, type });
 
         if (backendResponse.status === 200) {
           setProfilePicturePercentage(0);
-          ToastSuccess('Profile picture updated successfully!');
+          ToastSuccess('¡Foto de perfil actualizada exitosamente!');
           setHasChangesProfilePicture(false);
         }
       }
     } catch (err) {
-      ToastError('Error uploading image to S3');
+      ToastError('Error al subir la imagen a MinIO');
     }
 
     return null;
@@ -344,7 +289,7 @@ export default function Page() {
 
   const handleSaveBannerPicture = async () => {
     if (!bannerPicture.file) {
-      ToastError('No file selected for upload');
+      ToastError('No hay ningún archivo seleccionado para cargar');
       return null;
     }
 
@@ -360,9 +305,7 @@ export default function Page() {
       });
 
       const uploadResponse = await axios.put(presignedUrl, file, {
-        headers: {
-          'Content-Type': file.type,
-        },
+        headers: { 'Content-Type': file.type },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentage = Math.floor((progressEvent.loaded / progressEvent.total) * 100);
@@ -372,21 +315,16 @@ export default function Page() {
       });
 
       if (uploadResponse.status === 200) {
-        const backendResponse = await uploadBannerPicture({
-          key: fileKey,
-          title,
-          size,
-          type,
-        });
+        const backendResponse = await uploadBannerPicture({ key: fileKey, title, size, type });
 
         if (backendResponse.status === 200) {
           setBannerPicturePercentage(0);
-          ToastSuccess('Banner picture updated successfully!');
+          ToastSuccess('¡Imagen de portada actualizada exitosamente!');
           setHasChangesBannerPicture(false);
         }
       }
     } catch (err) {
-      ToastError('Error uploading image to S3');
+      ToastError('Error al subir la imagen de portada');
     }
 
     return null;
@@ -399,52 +337,37 @@ export default function Page() {
       !hasChangesProfilePicture &&
       !hasChangesBannerPicture
     ) {
-      ToastWarning('No changes to save.');
+      ToastWarning('Sin cambios para guardar.');
       return;
     }
 
     try {
       setLoading(true);
-
-      // If there are changes in user data, save them
-      if (hasChanges) {
-        await handleSaveUserData();
-      }
-
-      // If there are changes in profile data, save them
-      if (hasChangesProfile) {
-        await handleSaveProfileData();
-      }
-
-      if (hasChangesProfilePicture) {
-        await handleSaveProfilePicture();
-      }
-
-      if (hasChangesBannerPicture) {
-        await handleSaveBannerPicture();
-      }
+      if (hasChanges) await handleSaveUserData();
+      if (hasChangesProfile) await handleSaveProfileData();
+      if (hasChangesProfilePicture) await handleSaveProfilePicture();
+      if (hasChangesBannerPicture) await handleSaveBannerPicture();
     } catch (error) {
-      ToastError('An error occurred while saving changes.');
+      ToastError('Ocurrió un error al guardar los cambios.');
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <Container>
       <div>
         <div className="">
           <div className="-ml-4 -mt-4 flex flex-wrap items-center justify-between sm:flex-nowrap">
             <div className="ml-4 mt-4">
-              <h3 className="text-base font-semibold text-gray-900">User Information</h3>
+              <h3 className="text-base font-semibold text-gray-900">Información de usuario</h3>
               <p className="mt-1 text-sm text-gray-500">
-                This information will be displayed publicly so be careful what you share.
+                Esta información será visible públicamente, ten cuidado con lo que compartes.
               </p>
             </div>
             <div className="ml-4 mt-4 shrink-0">
               <Button
-                style={{
-                  width: '150px',
-                }}
+                style={{ width: '150px' }}
                 onClick={handleSaveData}
                 disabled={
                   loading ||
@@ -455,7 +378,7 @@ export default function Page() {
                 }
                 hoverEffect
               >
-                {loading ? <LoadingMoon /> : 'Save Changes'}
+                {loading ? <LoadingMoon /> : 'Guardar cambios'}
               </Button>
             </div>
           </div>
@@ -463,19 +386,21 @@ export default function Page() {
 
         <dl className="mt-6 space-y-6 divide-y divide-gray-100 border-t border-gray-200 text-sm/6">
           <div className="pt-6 sm:flex">
-            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">Username</dt>
+            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">
+              Nombre de usuario
+            </dt>
             <dd className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
               <EditText data={username} setData={setUsername} />
             </dd>
           </div>
           <div className="pt-6 sm:flex">
-            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">First Name</dt>
+            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">Nombre</dt>
             <dd className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
               <EditText data={firstName} setData={setFirstName} />
             </dd>
           </div>
           <div className="pt-6 sm:flex">
-            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">Last Name</dt>
+            <dt className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">Apellido</dt>
             <dd className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
               <EditText data={lastName} setData={setLastName} />
             </dd>
@@ -484,9 +409,9 @@ export default function Page() {
       </div>
 
       <div>
-        <h2 className="text-base/7 font-semibold text-gray-900">Profile</h2>
+        <h2 className="text-base/7 font-semibold text-gray-900">Perfil</h2>
         <p className="mt-1 text-sm/6 text-gray-500">
-          Your public profile information to let the world know more about you.
+          Información pública de tu perfil para que el mundo sepa más sobre ti.
         </p>
 
         <ul className="mt-6 divide-y divide-gray-100 border-t border-gray-200 text-sm/6">
@@ -496,7 +421,7 @@ export default function Page() {
               data={profilePicture}
               setData={setProfilePicture}
               percentage={profilePicturePerceentage}
-              title="Profile Picture"
+              title="Foto de perfil"
             />
           </li>
           <li className="py-6">
@@ -506,20 +431,24 @@ export default function Page() {
               setData={setBannerPicture}
               percentage={bannerPicturePercentage}
               variant="banner"
-              title="Banner Picture"
+              title="Imagen de portada"
             />
           </li>
           <li className="py-6">
-            <EditRichText title="Biography" data={biography} setData={setBiography} />
+            <EditRichText title="Biografía" data={biography} setData={setBiography} />
           </li>
           <li className="py-6 sm:flex">
-            <h4 className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">Birthday</h4>
+            <h4 className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">
+              Fecha de nacimiento
+            </h4>
             <div className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
               <EditDate useTime={false} data={birthday} setData={setBirthDay} />
             </div>
           </li>
           <li className="py-6 sm:flex">
-            <h4 className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">Website</h4>
+            <h4 className="font-medium text-gray-900 sm:w-64 sm:flex-none sm:pr-6">
+              Sitio web
+            </h4>
             <div className="mt-1 flex justify-between gap-x-6 sm:mt-0 sm:flex-auto">
               <EditURL data={website} setData={setWebsite} />
             </div>

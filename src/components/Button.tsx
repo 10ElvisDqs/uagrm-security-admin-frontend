@@ -19,7 +19,7 @@ export default function Button({
   type = 'button',
   icon = '',
   textSize = 'text-md',
-  bgColor = 'bg-indigo-700 hover:bg-indigo-700',
+  bgColor = 'bg-red-700 hover:bg-red-700',
   padding = 'py-3.5 px-4',
   margin = '',
   hoverEffect = false,

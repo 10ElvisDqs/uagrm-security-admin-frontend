@@ -13,6 +13,7 @@ export async function fetchS3SignedURL(props: ComponentProps) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(props),
+      
     });
 
     const data = await res.json();
