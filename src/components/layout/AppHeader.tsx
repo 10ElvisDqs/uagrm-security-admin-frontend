@@ -22,6 +22,14 @@ export default function AppHeader({ title, setSidebarOpen }: AppHeaderProps) {
     const user = useSelector((state: RootState) => state.auth.user);
     console.log('User en AppHeader:', user);
     const profile = useSelector((state: RootState) => state.auth.profile);
+    const profileImageUrl = (() => {
+        const rawUrl = getValidImageUrl(profile?.profile_picture?.url);
+        if (!rawUrl) return null;
+        const cacheKey = profile?.profile_picture?.key;
+        if (!cacheKey) return rawUrl;
+        const separator = rawUrl.includes('?') ? '&' : '?';
+        return `${rawUrl}${separator}v=${encodeURIComponent(cacheKey)}`;
+    })();
 
     const handleLogout = () => {
         dispatch(logout());
@@ -54,13 +62,13 @@ export default function AppHeader({ title, setSidebarOpen }: AppHeaderProps) {
                     >
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-bold text-slate-800">{user?.first_name || 'Usuario'}</p>
-                            <p className="text-xs text-slate-500 uppercase tracking-tighter">{user?.role || 'user'}</p>
+                            <p className="text-xs text-slate-500 uppercase tracking-tighter">{user?.rol.nombre || 'user'}</p>
                         </div>
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 ring-2 ring-white overflow-hidden shadow-inner">
-                            {getValidImageUrl(profile?.profile_picture?.url) ? (
+                            {profileImageUrl ? (
                                 <Image
                                     className="h-full w-full object-cover"
-                                    src={getValidImageUrl(profile?.profile_picture?.url) as string}
+                                    src={profileImageUrl as string}
                                     width={40}
                                     height={40}
                                     alt="profile"

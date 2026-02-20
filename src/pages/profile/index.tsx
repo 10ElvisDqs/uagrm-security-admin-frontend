@@ -195,7 +195,11 @@ export default function ProfilePage() {
     });
     if (up.status === 200) {
       const br = await uploadProfilePicture({ key: fileKey, title, size, type });
-      if (br.status === 200) { setProfilePicturePercentage(0); setHasChangesProfilePicture(false); }
+      if (br.status === 200) {
+        setProfilePicturePercentage(0);
+        setHasChangesProfilePicture(false);
+        await dispatch(loadProfile());
+      }
     }
   };
 
@@ -211,7 +215,11 @@ export default function ProfilePage() {
     });
     if (up.status === 200) {
       const br = await uploadBannerPicture({ key: fileKey, title, size, type });
-      if (br.status === 200) { setBannerPicturePercentage(0); setHasChangesBannerPicture(false); }
+      if (br.status === 200) {
+        setBannerPicturePercentage(0);
+        setHasChangesBannerPicture(false);
+        await dispatch(loadProfile());
+      }
     }
   };
 

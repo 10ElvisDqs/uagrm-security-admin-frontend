@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, User as UserIcon, Mail, Shield, Lock, CheckCircle, Info, Key, Fingerprint } from 'lucide-react';
-import { User, createUser, updateUser } from '@/utils/api/admin/users';
-import { getRolesUniversales, RolUniversal } from '@/utils/api/admin/roles';
+import { User, createUser, updateUser, assignAccessRoleToUser, removeAccessRoleFromUser } from '@/utils/api/admin/users';
+import { getRolesUniversales, RolUniversal, getRoles, Role } from '@/utils/api/admin/roles';
 import { toast } from 'react-toastify';
+import getCurrentAccessRoleName from '@/utils/api/auth/getCurrentAccessRole';
 
 interface UserFormProps {
     user?: User | null;
@@ -26,12 +27,16 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
     });
 
     const [universalRoles, setUniversalRoles] = useState<RolUniversal[]>([]);
+    const [accessRoles, setAccessRoles] = useState<Role[]>([]);
+    const [selectedAccessRoleId, setSelectedAccessRoleId] = useState<string>('');
+    const [currentAccessLevel, setCurrentAccessLevel] = useState<number | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
         loadUniversalRoles();
+        loadAccessRoles();
         if (typeof window !== 'undefined') {
             document.body.style.overflow = 'hidden';
             return () => {
@@ -49,6 +54,24 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
         }
     };
 
+    const loadAccessRoles = async () => {
+        try {
+            const [roles, currentRoleName] = await Promise.all([
+                getRoles(),
+                getCurrentAccessRoleName(),
+            ]);
+            setAccessRoles(roles);
+            if (currentRoleName) {
+                const current = roles.find(r => r.name === currentRoleName);
+                if (current?.nivel !== undefined && current?.nivel !== null) {
+                    setCurrentAccessLevel(Number(current.nivel));
+                }
+            }
+        } catch (error) {
+            console.error('Error loading access roles:', error);
+        }
+    };
+
     useEffect(() => {
         if (user) {
             setFormData({
@@ -58,6 +81,15 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
             } as any);
         }
     }, [user]);
+
+    useEffect(() => {
+        if (user && accessRoles.length > 0) {
+            const roleMatch = accessRoles.find(r => r.name === user.role);
+            if (roleMatch?.id) {
+                setSelectedAccessRoleId(String(roleMatch.id));
+            }
+        }
+    }, [user, accessRoles]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target as HTMLInputElement;
@@ -69,8 +101,22 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
         e.preventDefault();
         setIsSaving(true);
         try {
+            const selectableRoleIds = accessRoles
+                .filter(r => currentAccessLevel === null || (r.nivel ?? 0) > currentAccessLevel)
+                .map(r => String(r.id));
+            if (selectedAccessRoleId && !selectableRoleIds.includes(selectedAccessRoleId)) {
+                toast.error('No podés asignar un rol de ese nivel.');
+                setIsSaving(false);
+                return;
+            }
+
             if (user) {
                 await updateUser(user.id, formData as any);
+                if (selectedAccessRoleId) {
+                    await assignAccessRoleToUser(user.id, selectedAccessRoleId);
+                } else {
+                    await removeAccessRoleFromUser(user.id);
+                }
                 toast.success('Usuario actualizado correctamente');
             } else {
                 if (!formData.password) {
@@ -78,7 +124,10 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
                     setIsSaving(false);
                     return;
                 }
-                await createUser(formData as any);
+                const created = await createUser(formData as any);
+                if (created?.id && selectedAccessRoleId) {
+                    await assignAccessRoleToUser(created.id, selectedAccessRoleId);
+                }
                 toast.success('Usuario creado correctamente');
             }
             onSaved();
@@ -221,7 +270,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
                                 <Shield className="w-3.5 h-3.5" /> Roles y Permisos
                             </h3>
                         </div>
-
+                        {/*
                         <div className="space-y-1.5">
                             <label className="text-sm font-semibold text-slate-700 ml-1">Rol de Seguridad (Permisos)</label>
                             <div className="relative group">
@@ -242,7 +291,33 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
                             </div>
                             <p className="text-[10px] text-slate-400 mx-1">Define qué sistemas y permisos tiene el usuario.</p>
                         </div>
+                         */}
 
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-semibold text-slate-700 ml-1">Rol de Acceso (Access Control)</label>
+                            <div className="relative group">
+                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-red-600 transition-colors" />
+                                <select
+                                    value={selectedAccessRoleId}
+                                    onChange={e => setSelectedAccessRoleId(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600/20 focus:border-red-600/40 transition-all text-sm appearance-none cursor-pointer font-medium"
+                                >
+                                    <option value="">Sin Rol Asignado</option>
+                                    {accessRoles
+                                        .filter(r => currentAccessLevel === null || (r.nivel ?? 0) > currentAccessLevel)
+                                        .map(rol => (
+                                            <option key={rol.id} value={rol.id}>
+                                                {rol.name} (nivel {rol.nivel ?? '-'})
+                                            </option>
+                                        ))}
+                                </select>
+                            </div>
+                            {currentAccessLevel !== null && (
+                                <p className="text-[10px] text-slate-400 mx-1">Solo podés asignar roles con nivel &gt; {currentAccessLevel}.</p>
+                            )}
+                        </div>
+
+                            {/* 
                         <div className="space-y-1.5">
                             <label className="text-sm font-semibold text-slate-700 ml-1">Rol Institucional (Cargo)</label>
                             <div className="relative group">
@@ -263,6 +338,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSaved }) => {
                             </div>
                         </div>
 
+                         */}
                         {/* Estados */}
                         <div className="md:col-span-2 flex flex-wrap gap-10 mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                             <label className="flex items-center gap-3 cursor-pointer group">

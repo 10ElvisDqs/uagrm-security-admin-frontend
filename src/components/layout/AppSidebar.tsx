@@ -3,8 +3,10 @@ import { LayoutDashboard, Grid, Settings, ShieldCheck, Shield, Key, Users, IdCar
 
 <IdCard size={20} />
 
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/reducers';
+import getAccessPermissions from '@/utils/api/auth/getAccessPermissions';
 
 interface AppSidebarProps {
     sidebarOpen: boolean;
@@ -14,13 +16,26 @@ interface AppSidebarProps {
 export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarProps) {
     const router = useRouter();
     const { user } = useSelector((state: RootState) => state.auth);
+    const [permissions, setPermissions] = useState<string[]>([]);
+
+    useEffect(() => {
+        let mounted = true;
+        const loadPermissions = async () => {
+            const perms = await getAccessPermissions();
+            if (mounted) setPermissions(perms);
+        };
+        loadPermissions();
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
     const allNavigation = [
         { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
         { name: 'Dispositivos', href: '/admin/devices', icon: Shield, adminOnly: true },
         { name: 'Sistemas', href: '/admin/systems', icon: Grid, adminOnly: true },
-        { name: 'Usuarios', href: '/users', icon: Users, adminOnly: true },
-        { name: 'Roles', href: '/admin/roles', icon: Key, adminOnly: true },
+        { name: 'Usuarios', href: '/users', icon: Users, requiredPermission: '' },
+        { name: 'Roles', href: '/admin/roles', icon: Key, requiredPermission: '' },
         { name: 'Auditoría', href: '/admin/auditoria', icon: ShieldCheck, adminOnly: true },
         { name: 'Información Personal', href: '/profile', icon: IdCard, adminOnly: false },
         { name: 'Configuración', href: '/profile/security', icon: Settings },
@@ -28,6 +43,7 @@ export default function AppSidebar({ sidebarOpen, setSidebarOpen }: AppSidebarPr
 
     const navigation = allNavigation.filter(item => {
         if (item.adminOnly && !user?.is_superuser) return false;
+        if (item.requiredPermission && !permissions.includes(item.requiredPermission)) return false;
         return true;
     });
 

@@ -69,3 +69,29 @@ export const deleteUser = async (id: string): Promise<void> => {
     });
     if (!res.ok) throw new Error('Failed to delete user');
 };
+
+export const assignAccessRoleToUser = async (userId: string, roleId: string): Promise<any> => {
+    const res = await fetch('/api/admin/users/assign-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, rol_id: roleId }),
+    });
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || errorData.detail || 'No se pudo asignar el rol');
+    }
+    return res.json();
+};
+
+export const removeAccessRoleFromUser = async (userId: string): Promise<any> => {
+    const res = await fetch('/api/admin/users/assign-role', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId }),
+    });
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || errorData.detail || 'No se pudo quitar el rol');
+    }
+    return res.json();
+};

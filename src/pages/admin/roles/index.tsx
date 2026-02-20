@@ -1,25 +1,43 @@
 import { useState, useEffect } from "react";
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/reducers';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import RoleHeader from "@/components/modules/admin/roles/RoleHeader";
 import RoleList from "@/components/modules/admin/roles/RoleList";
 import RoleForm from "@/components/modules/admin/roles/RoleForm";
-import { Role, getRoles, createRole, updateRole, deleteRole, assignPermissionsToGroup } from "@/utils/api/admin/roles";
+import { Role, RolePayload, getRoles, createRole, updateRole, deleteRole, assignPermissionsToGroup } from "@/utils/api/admin/roles";
 import { toast } from "react-toastify";
+import getCurrentAccessRoleName from "@/utils/api/auth/getCurrentAccessRole";
 
 export default function RolesPage() {
     const [roles, setRoles] = useState<Role[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingRole, setEditingRole] = useState<Role | null>(null);
+    const [currentAccessRoleName, setCurrentAccessRoleName] = useState<string | null>(null);
+    const [currentAccessLevel, setCurrentAccessLevel] = useState<number | null>(null);
+    const [currentAccessRoleId, setCurrentAccessRoleId] = useState<string | null>(null);
+
+    const user = useSelector((state: RootState) => state.auth.user);
 
     useEffect(() => {
         loadRoles();
+        loadCurrentAccessRole();
     }, []);
 
     const loadRoles = async () => {
         try {
             const data = await getRoles();
             setRoles(data);
+            if (currentAccessRoleName) {
+                const roleMatch = data.find(r => r.name === currentAccessRoleName);
+                if (roleMatch?.nivel !== undefined && roleMatch?.nivel !== null) {
+                    setCurrentAccessLevel(Number(roleMatch.nivel));
+                }
+                if (roleMatch?.id !== undefined && roleMatch?.id !== null) {
+                    setCurrentAccessRoleId(String(roleMatch.id));
+                }
+            }
         } catch (error) {
             console.error("Error loading roles:", error);
             toast.error("Error al cargar los roles");
@@ -28,14 +46,50 @@ export default function RolesPage() {
         }
     };
 
-    const handleSave = async (name: string, permissionData: any) => {
+    const loadCurrentAccessRole = async () => {
         try {
+            const roleName = await getCurrentAccessRoleName();
+            const fallback = user?.role && typeof user.role === 'string' ? user.role : null;
+            const finalName = roleName || fallback;
+            setCurrentAccessRoleName(finalName);
+            if (finalName && roles.length > 0) {
+                const roleMatch = roles.find(r => r.name === finalName);
+                if (roleMatch?.nivel !== undefined && roleMatch?.nivel !== null) {
+                    setCurrentAccessLevel(Number(roleMatch.nivel));
+                }
+                if (roleMatch?.id !== undefined && roleMatch?.id !== null) {
+                    setCurrentAccessRoleId(String(roleMatch.id));
+                }
+            }
+        } catch (error) {
+            console.error("Error loading current access role:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (currentAccessRoleName && roles.length > 0) {
+            const roleMatch = roles.find(r => r.name === currentAccessRoleName);
+            if (roleMatch?.nivel !== undefined && roleMatch?.nivel !== null) {
+                setCurrentAccessLevel(Number(roleMatch.nivel));
+            }
+            if (roleMatch?.id !== undefined && roleMatch?.id !== null) {
+                setCurrentAccessRoleId(String(roleMatch.id));
+            }
+        }
+    }, [currentAccessRoleName, roles]);
+
+    const handleSave = async (payload: RolePayload, permissionData: any) => {
+        try {
+            if (currentAccessLevel !== null && payload.nivel !== undefined && payload.nivel <= currentAccessLevel) {
+                toast.error(`No podés crear/editar un rol con nivel <= ${currentAccessLevel}.`);
+                return;
+            }
             let roleId = editingRole?.id;
             if (editingRole) {
-                await updateRole(editingRole.id, name);
+                await updateRole(editingRole.id, payload);
                 toast.success("Rol actualizado con éxito");
             } else {
-                const newRole = await createRole(name);
+                const newRole = await createRole(payload);
                 roleId = newRole.id;
                 toast.success("Rol creado con éxito");
             }
@@ -99,6 +153,9 @@ export default function RolesPage() {
                 {isFormOpen && (
                     <RoleForm
                         role={editingRole}
+                        roles={roles}
+                        currentAccessLevel={currentAccessLevel}
+                        currentAccessRoleId={currentAccessRoleId}
                         onSave={handleSave}
                         onClose={() => setIsFormOpen(false)}
                     />

@@ -82,7 +82,7 @@ const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, isLoading 
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center gap-1.5 text-indigo-600 font-bold text-[10px] uppercase tracking-wider">
                                             <Shield className="w-3 h-3" />
-                                            {user.role}
+                                            {user.rol?.nombre || 'Sin rol'}
                                         </div>
                                         <span className="text-xs text-slate-400 font-medium">#{user.code || 'N/A'}</span>
                                     </div>

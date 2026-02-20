@@ -3,10 +3,9 @@ import { forwardCookies } from '../../../../utils/cookies/forwardCookies';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { method } = req;
-    const useModernEndpoint = method === 'GET' || method === 'POST';
-    const backendUrl = useModernEndpoint
-        ? `${process.env.API_URL}/api/access/aplicaciones/`
-        : `${process.env.API_URL}/api/authorization/sistemas/`;
+    const isModernMethod = method === 'GET' || method === 'POST';
+    const baseUrl = `${process.env.API_URL}/api/access/aplicaciones/`;
+    const slugFromQuery = typeof req.query.slug === 'string' ? req.query.slug : '';
 
     try {
         const apiHeaders = forwardCookies(req);
@@ -28,6 +27,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             payload.url_backend = payload.url_backend ?? payload.urlBackend ?? '';
             fetchOptions.body = JSON.stringify(payload);
         }
+
+        const slugFromBody = typeof req.body?.slug === 'string' ? req.body.slug : '';
+        const slug = slugFromBody || slugFromQuery;
+        const backendUrl = isModernMethod
+            ? baseUrl
+            : slug
+                ? `${baseUrl}${slug}/`
+                : baseUrl;
 
         const apiRes = await fetch(backendUrl, fetchOptions);
         const data = await apiRes.json();

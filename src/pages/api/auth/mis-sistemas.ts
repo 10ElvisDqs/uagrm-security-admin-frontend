@@ -57,11 +57,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (apiRes.status === 200) {
             // Normaliza contrato nuevo /api/access/mis-sistemas/ al formato esperado por el frontend.
+            const normalizeApp = (item: any) => ({
+                ...item,
+                url: item.url ?? item.urlFrontend ?? item.url_frontend ?? '',
+                icon: item.icon ?? item.icono ?? '',
+                icono: item.icono ?? item.icon ?? '',
+                color: item.color ?? '#ef4444',
+                descripcion: item.descripcion ?? '',
+                nombre: item.nombre ?? '',
+                id: item.id,
+            });
+
             if (data?.usuario && Array.isArray(data?.sistemas) && !data?.results) {
                 return res.status(200).json({
                     results: {
                         usuario: data.usuario,
-                        aplicaciones: data.sistemas,
+                        aplicaciones: data.sistemas.map(normalizeApp),
+                    },
+                });
+            }
+            if (data?.results?.usuario && Array.isArray(data?.results?.sistemas)) {
+                return res.status(200).json({
+                    results: {
+                        usuario: data.results.usuario,
+                        aplicaciones: data.results.sistemas.map(normalizeApp),
                     },
                 });
             }

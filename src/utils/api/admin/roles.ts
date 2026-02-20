@@ -2,12 +2,28 @@ export interface Role {
     id: number | string;
     name: string;
     permissions_count: number;
+    slug?: string;
+    descripcion?: string;
+    nivel?: number;
+    padre?: string | number | null;
+    padre_nombre?: string;
+    es_institucional?: boolean;
+    activo?: boolean;
 }
 
 export interface Permission {
     id: string | number;
     name: string;
     codename: string;
+}
+
+export interface RolePayload {
+    name: string;
+    nivel?: number;
+    padre?: string | number | null;
+    descripcion?: string;
+    es_institucional?: boolean;
+    activo?: boolean;
 }
 
 export const getRoles = async (): Promise<Role[]> => {
@@ -23,11 +39,11 @@ export const getRoles = async (): Promise<Role[]> => {
     return res.json();
 };
 
-export const createRole = async (name: string): Promise<Role> => {
+export const createRole = async (payload: RolePayload): Promise<Role> => {
     const res = await fetch('/api/admin/roles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(payload),
     });
     if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -36,11 +52,11 @@ export const createRole = async (name: string): Promise<Role> => {
     return res.json();
 };
 
-export const updateRole = async (id: number | string, name: string): Promise<Role> => {
+export const updateRole = async (id: number | string, payload: RolePayload): Promise<Role> => {
     const res = await fetch(`/api/admin/roles?id=${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error('Failed to update role');
     return res.json();

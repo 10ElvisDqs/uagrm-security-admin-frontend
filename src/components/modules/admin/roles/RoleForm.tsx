@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Shield, Layout, Search, Check, ChevronRight } from 'lucide-react';
-import { Role, Permission, getPermissions, getGroupAplicacions } from '@/utils/api/admin/roles';
+import { Role, RolePayload, Permission, getPermissions, getGroupAplicacions } from '@/utils/api/admin/roles';
 import { getAplicaciones, Aplicacion } from '@/utils/api/admin/systems';
 
 interface RoleFormProps {
     role?: Role | null;
-    onSave: (name: string, selectedPermissions: any) => Promise<void>;
+    roles: Role[];
+    currentAccessLevel: number | null;
+    currentAccessRoleId: string | null;
+    onSave: (payload: RolePayload, selectedPermissions: any) => Promise<void>;
     onClose: () => void;
 }
 
-export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
+export default function RoleForm({ role, roles, currentAccessLevel, currentAccessRoleId, onSave, onClose }: RoleFormProps) {
     const [name, setName] = useState(role?.name || '');
+    const [nivel, setNivel] = useState<number>(role?.nivel ?? 99);
+    const [padreId, setPadreId] = useState<string | number | ''>(role?.padre ?? '');
     const [apps, setApps] = useState<Aplicacion[]>([]);
     const [permissions, setPermissions] = useState<Permission[]>([]);
     // Mapa de aplicacionId -> lista de IDs de permisos
     const [localAssignments, setLocalAssignments] = useState<Record<string, Array<string | number>>>({});
     const [selectedApp, setSelectedApp] = useState<Aplicacion | null>(null);
+    const [allowedAssignments, setAllowedAssignments] = useState<Record<string, Array<string | number>>>({});
+    const [allowedAssignmentsLoaded, setAllowedAssignmentsLoaded] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -31,12 +38,29 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
         };
     }, []);
 
+    useEffect(() => {
+        if (!role && currentAccessLevel !== null) {
+            setNivel(currentAccessLevel + 1);
+        }
+    }, [currentAccessLevel, role]);
+
     const loadInitialData = async () => {
         try {
-            const [appsData] = await Promise.all([
-                getAplicaciones()
+            const [appsData, currentAssignments] = await Promise.all([
+                getAplicaciones(),
+                currentAccessRoleId ? getGroupAplicacions(currentAccessRoleId) : Promise.resolve([]),
             ]);
             setApps(appsData);
+            if (currentAccessRoleId) {
+                setAllowedAssignmentsLoaded(true);
+            }
+            if (currentAssignments.length > 0) {
+                const map: Record<string, Array<string | number>> = {};
+                currentAssignments.forEach(a => {
+                    map[a.aplicacion] = a.permissions;
+                });
+                setAllowedAssignments(map);
+            }
 
             if (role) {
                 const existingAssignments = await getGroupAplicacions(role.id);
@@ -78,9 +102,17 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            if (currentAccessLevel !== null && nivel <= currentAccessLevel) {
+                console.error("Nivel inválido para el usuario actual.");
+                return;
+            }
             setIsSaving(true);
             // Enviar todos los cambios realizados
-            await onSave(name, {
+            await onSave({
+                name,
+                nivel: Number.isFinite(nivel) ? nivel : 99,
+                padre: padreId || null,
+            }, {
                 assignments: localAssignments,
                 currentSystemId: selectedApp?.id
             });
@@ -108,6 +140,9 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
     };
 
     const selectedPermissions = selectedApp ? (localAssignments[selectedApp.slug || selectedApp.id] || []) : [];
+    const allowedPermissionsForApp = selectedApp
+        ? (allowedAssignments[selectedApp.slug || selectedApp.id] || [])
+        : [];
 
     const modalContent = (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -135,6 +170,54 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                                     className="mt-2 w-full rounded-2xl bg-white/10 px-4 py-3 text-sm font-bold text-white placeholder:text-slate-500 focus:bg-white/20 focus:outline-none"
                                     placeholder="Ej: Administrador, Docente..."
                                 />
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Rol Padre (opcional)</label>
+                                <select
+                                    value={padreId}
+                                    onChange={e => {
+                                        const nextId = e.target.value || '';
+                                        setPadreId(nextId);
+                                        const selectedParent = roles.find(r => String(r.id) === String(nextId));
+                                        if (selectedParent?.nivel !== undefined && selectedParent?.nivel !== null) {
+                                            setNivel(Number(selectedParent.nivel) + 1);
+                                        }
+                                    }}
+                                    className="mt-2 w-full rounded-2xl bg-white/10 px-4 py-3 text-sm font-bold text-white focus:bg-white/20 focus:outline-none"
+                                >
+                                    <option value="">Sin padre</option>
+                                    {roles
+                                        .filter(r => !role || String(r.id) !== String(role.id))
+                                        .filter(r => currentAccessLevel === null || (r.nivel ?? 0) > currentAccessLevel)
+                                        .map(r => (
+                                            <option key={r.id} value={r.id}>
+                                                {r.name} (nivel {r.nivel ?? '-'})
+                                            </option>
+                                        ))}
+                                </select>
+                                {currentAccessLevel !== null && (
+                                    <p className="mt-2 text-[10px] text-slate-400">
+                                        Solo podés asignar padres con nivel &gt; {currentAccessLevel}.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nivel</label>
+                                <input
+                                    type="number"
+                                    min={currentAccessLevel !== null ? currentAccessLevel + 1 : 1}
+                                    value={Number.isFinite(nivel) ? nivel : ''}
+                                    onChange={e => setNivel(Number(e.target.value))}
+                                    className="mt-2 w-full rounded-2xl bg-white/10 px-4 py-3 text-sm font-bold text-white placeholder:text-slate-500 focus:bg-white/20 focus:outline-none"
+                                    placeholder="Ej: 10"
+                                />
+                                {currentAccessLevel !== null && nivel <= currentAccessLevel && (
+                                    <p className="mt-2 text-[10px] text-rose-300">
+                                        Nivel inválido. Debe ser mayor a {currentAccessLevel}.
+                                    </p>
+                                )}
                             </div>
 
                             <hr className="border-white/10" />
@@ -177,6 +260,16 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                         </div>
 
                         <div className="flex-1 px-8 py-6">
+                            {currentAccessRoleId && allowedAssignmentsLoaded && (
+                                <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                                    Solo podés asignar permisos que ya tenés en tu rol.
+                                </div>
+                            )}
+                            {!currentAccessRoleId && (
+                                <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                                    No se pudo determinar tu rol actual. Se muestran todos los permisos.
+                                </div>
+                            )}
                             <div className="relative mb-6">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                 <input
@@ -195,19 +288,30 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                                         return matchesSearch;
                                     })
                                     .map(perm => (
+                                        (() => {
+                                            const canAssign = !currentAccessRoleId
+                                                ? true
+                                                : allowedAssignmentsLoaded
+                                                    ? allowedPermissionsForApp.includes(perm.id)
+                                                    : true;
+                                            return (
                                         <button
                                             key={perm.id}
                                             onClick={() => togglePermission(perm.id)}
+                                            disabled={!canAssign}
                                             className={`group flex items-center justify-between rounded-xl border p-4 transition-all ${selectedPermissions.includes(perm.id)
                                                 ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
                                                 : 'border-slate-100 bg-white hover:border-slate-300 shadow-sm'
-                                                }`}
+                                                } ${!canAssign ? 'opacity-50 cursor-not-allowed hover:border-slate-100' : ''}`}
                                         >
                                             <div className="text-left">
                                                 <p className="text-sm font-bold">{perm.name}</p>
                                                 <p className={`text-[10px] font-mono tracking-wider ${selectedPermissions.includes(perm.id) ? 'text-slate-400' : 'text-slate-400'}`}>
                                                     {perm.codename}
                                                 </p>
+                                                {!canAssign && (
+                                                    <p className="text-[10px] text-rose-400 mt-1">No tenés este permiso en tu rol.</p>
+                                                )}
                                             </div>
                                             {selectedPermissions.includes(perm.id) && (
                                                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-900 shrink-0">
@@ -215,6 +319,8 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
                                                 </div>
                                             )}
                                         </button>
+                                            );
+                                        })()
                                     ))}
                             </div>
                         </div>

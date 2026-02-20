@@ -21,6 +21,11 @@ export default function SistemaCard({
     const handleClick = async () => {
         try {
             setLoading(true);
+
+            if (!url || typeof url !== 'string') {
+                alert('El sistema no tiene una URL configurada.');
+                return;
+            }
             
             // 📤 Obtener tokens cifrados del backend
             const response = await fetch('/api/auth/get-sso-tokens', {
@@ -32,7 +37,14 @@ export default function SistemaCard({
                 const { sso_access_token, sso_refresh_token } = await response.json();
                 
                 // 🔗 Construir URL al endpoint de SSO del sistema externo
-                const ssoUrl = new URL(`${url}/sso-callback`);
+                let ssoUrl: URL;
+                try {
+                    ssoUrl = new URL(`${url}/sso-callback`);
+                } catch (e) {
+                    console.error('Invalid system URL:', url);
+                    alert('URL inválida del sistema. Contacta con soporte.');
+                    return;
+                }
                 ssoUrl.searchParams.set('access_token', sso_access_token);
                 ssoUrl.searchParams.set('refresh_token', sso_refresh_token);
                 

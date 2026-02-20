@@ -6,10 +6,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { id } = query;
     const isModernMethod = method === 'GET' || method === 'POST';
     let backendUrl = `${process.env.API_URL}/api/access/roles/`;
-    if (!isModernMethod) {
-        backendUrl = id
-            ? `${process.env.API_URL}/api/authorization/roles/${id}/`
-            : `${process.env.API_URL}/api/authorization/roles/`;
+    if (id) {
+        backendUrl = `${process.env.API_URL}/api/access/roles/${id}/`;
+    } else if (!isModernMethod) {
+        backendUrl = `${process.env.API_URL}/api/access/roles/`;
     }
 
     try {
@@ -28,6 +28,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             // Nuevo backend usa nombre; frontend usa name.
             if (payload.name && !payload.nombre) {
                 payload.nombre = payload.name;
+            }
+            if (!payload.slug) {
+                const base = String(payload.nombre ?? payload.name ?? '').trim();
+                if (base) {
+                    payload.slug = base
+                        .toLowerCase()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/(^-|-$)+/g, '');
+                }
+            }
+            if (payload.nivel !== undefined) {
+                const parsed = Number(payload.nivel);
+                payload.nivel = Number.isFinite(parsed) ? parsed : payload.nivel;
+            }
+            if (payload.padre && (!payload.nivel || Number.isNaN(Number(payload.nivel)))) {
+                try {
+                    const parentRes = await fetch(`${process.env.API_URL}/api/access/roles/${payload.padre}/`, {
+                        method: 'GET',
+                        headers: apiHeaders,
+                    });
+                    if (parentRes.ok) {
+                        const parentData = await parentRes.json().catch(() => ({}));
+                        const parentNivel = Number(parentData?.nivel);
+                        if (Number.isFinite(parentNivel)) {
+                            payload.nivel = parentNivel + 1;
+                        }
+                    }
+                } catch (e) {
+                    // Si falla, dejamos el nivel como vino.
+                }
             }
             fetchOptions.body = JSON.stringify(payload);
         }

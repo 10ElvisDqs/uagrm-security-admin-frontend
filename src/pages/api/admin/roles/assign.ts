@@ -12,48 +12,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(200).json([]);
             }
 
-            const appsRes = await fetch(`${process.env.API_URL}/api/access/aplicaciones/`, {
+            const roleRes = await fetch(`${process.env.API_URL}/api/access/roles/${group}/`, {
                 method: 'GET',
                 headers: apiHeaders,
             });
-            if (!appsRes.ok) {
-                return res.status(appsRes.status).json([]);
+            if (!roleRes.ok) {
+                return res.status(roleRes.status).json([]);
             }
 
-            const appsData = await appsRes.json();
-            const apps = Array.isArray(appsData) ? appsData : [];
+            const roleData = await roleRes.json().catch(() => ({}));
+            const apps = Array.isArray(roleData?.aplicaciones) ? roleData.aplicaciones : [];
 
             const assignments = await Promise.all(
-                apps.map(async (app: any) => {
-                    const { slug } = app;
+                apps.map(async (slug: any) => {
                     if (!slug) return null;
-
-                    const appRolesRes = await fetch(
-                        `${process.env.API_URL}/api/access/aplicaciones/${slug}/roles/`,
+                    const permsRes = await fetch(
+                        `${process.env.API_URL}/api/access/roles/${group}/permisos/?aplicacion=${encodeURIComponent(String(slug))}`,
                         {
                             method: 'GET',
                             headers: apiHeaders,
                         },
                     );
-
-                    if (!appRolesRes.ok) return null;
-
-                    const rolesData = await appRolesRes.json();
-                    const roles = Array.isArray(rolesData) ? rolesData : [];
-                    const roleMatch = roles.find((r: any) => String(r.id) === String(group));
-                    if (!roleMatch) return null;
-
-                    const permissionsRaw =
-                        roleMatch.permissions ||
-                        roleMatch.permisos ||
-                        roleMatch.permissions_ids ||
-                        roleMatch.permisos_ids ||
-                        [];
-
-                    const permissions = Array.isArray(permissionsRaw)
-                        ? permissionsRaw.map((p: any) => (typeof p === 'object' ? (p.id ?? p.codigo ?? p.codename) : p))
+                    if (!permsRes.ok) return null;
+                    const permsData = await permsRes.json().catch(() => ([]));
+                    const permissions = Array.isArray(permsData)
+                        ? permsData.map((p: any) => p.id ?? p.codigo ?? p.codename)
                         : [];
-
                     return {
                         group,
                         aplicacion: slug,
@@ -89,35 +73,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 return res.status(addAppRes.status).json(errorData);
             }
 
-            // 2) Vincular permisos al rol
-            const addPermRes = await fetch(
-                `${process.env.API_URL}/api/access/roles/${group}/agregar-permiso/`,
-                {
-                    method: 'POST',
-                    headers: {
-                        ...apiHeaders,
-                        'Content-Type': 'application/json',
+            // 2) Vincular permisos al rol (uno por uno)
+            const results = [];
+            for (const permisoId of permissions) {
+                const addPermRes = await fetch(
+                    `${process.env.API_URL}/api/access/roles/${group}/agregar-permiso/`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            ...apiHeaders,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ permiso_id: permisoId }),
                     },
-                    body: JSON.stringify({ aplicacion_slug: aplicacion, permisos: permissions }),
-                },
-            );
+                );
 
-            if (!addPermRes.ok) {
-                // Fallback legado mientras el backend nuevo estabiliza contrato.
-                const legacyRes = await fetch(`${process.env.API_URL}/api/authorization/grupos-aplicacion/`, {
-                    method: 'POST',
-                    headers: {
-                        ...apiHeaders,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(req.body),
-                });
-                const legacyData = await legacyRes.json().catch(() => ({}));
-                return res.status(legacyRes.status).json(legacyData);
+                if (!addPermRes.ok) {
+                    const errorData = await addPermRes.json().catch(() => ({}));
+                    return res.status(addPermRes.status).json(errorData);
+                }
+
+                const addPermData = await addPermRes.json().catch(() => ({}));
+                results.push(addPermData);
             }
 
-            const addPermData = await addPermRes.json().catch(() => ({}));
-            return res.status(addPermRes.status).json(addPermData);
+            return res.status(200).json({ results });
         }
 
         return res.status(405).json({ error: `Method ${method} not allowed` });
