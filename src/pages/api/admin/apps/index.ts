@@ -3,7 +3,10 @@ import { forwardCookies } from '../../../../utils/cookies/forwardCookies';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { method } = req;
-    const backendUrl = `${process.env.API_URL}/api/authorization/apps/`;
+    const useModernEndpoint = method === 'GET' || method === 'POST';
+    const backendUrl = useModernEndpoint
+        ? `${process.env.API_URL}/api/access/aplicaciones/`
+        : `${process.env.API_URL}/api/authorization/apps/`;
 
     try {
         const apiHeaders = forwardCookies(req);
@@ -17,11 +20,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
 
         if (['POST', 'PUT', 'PATCH'].includes(method!)) {
-            fetchOptions.body = JSON.stringify(req.body);
+            const payload = { ...req.body };
+            // Mantener compatibilidad snake_case/camelCase.
+            payload.icon = payload.icon ?? payload.icono ?? '';
+            payload.nombre = payload.nombre ?? payload.name ?? '';
+            payload.url_frontend = payload.url_frontend ?? payload.urlFrontend ?? payload.url ?? '';
+            payload.url_backend = payload.url_backend ?? payload.urlBackend ?? '';
+            fetchOptions.body = JSON.stringify(payload);
         }
 
         const apiRes = await fetch(backendUrl, fetchOptions);
         const data = await apiRes.json();
+
+        if (Array.isArray(data)) {
+            const normalized = data.map((item: any) => ({
+                id: item.id,
+                nombre: item.nombre ?? item.name ?? '',
+                slug: item.slug ?? '',
+                url_frontend: item.url_frontend ?? item.urlFrontend ?? item.url ?? '',
+                url_backend: item.url_backend ?? item.urlBackend ?? '',
+                descripcion: item.descripcion ?? item.description ?? '',
+                icon: item.icon ?? item.icono ?? '',
+                color: item.color ?? '#ef4444',
+                activa: item.activa ?? item.activo ?? true,
+                created_at: item.created_at ?? item.createdAt ?? '',
+            }));
+            return res.status(apiRes.status).json(normalized);
+        }
 
         return res.status(apiRes.status).json(data);
     } catch (error: any) {

@@ -24,15 +24,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(405).json({ error: `Method ${req.method} not allowed` });
         }
 
-        const backendUrl = `${process.env.API_URL}/api/authentication/mis-sistemas/`;
-        
         const apiHeaders = forwardCookies(req);
+        const accessUrl = `${process.env.API_URL}/api/access/mis-sistemas/`;
+        const legacyUrl = `${process.env.API_URL}/api/authentication/mis-sistemas/`;
 
-        const apiRes = await fetch(backendUrl, {
+        let apiRes = await fetch(accessUrl, {
             method: 'GET',
             headers: apiHeaders,
             cache: 'no-store',
         });
+
+        // Compatibilidad temporal con backend legado.
+        if (apiRes.status === 404) {
+            apiRes = await fetch(legacyUrl, {
+                method: 'GET',
+                headers: apiHeaders,
+                cache: 'no-store',
+            });
+        }
 
         const text = await apiRes.text();
 
@@ -47,6 +56,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         if (apiRes.status === 200) {
+            // Normaliza contrato nuevo /api/access/mis-sistemas/ al formato esperado por el frontend.
+            if (data?.usuario && Array.isArray(data?.sistemas) && !data?.results) {
+                return res.status(200).json({
+                    results: {
+                        usuario: data.usuario,
+                        aplicaciones: data.sistemas,
+                    },
+                });
+            }
             return res.status(200).json(data);
         }
         

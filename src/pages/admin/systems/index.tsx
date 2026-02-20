@@ -9,7 +9,6 @@ import SystemForm from '@/components/modules/admin/systems/SystemForm';
 import {
     getSistemas,
     getAplicaciones,
-    saveSistema,
     saveAplicacion,
     syncPermissions,
     Sistema,
@@ -38,12 +37,12 @@ export default function AdminSystemsPage() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [systemsData, appsData] = await Promise.all([
-                getSistemas(),
-                getAplicaciones()
+            const [appsData, systemsData] = await Promise.all([
+                getAplicaciones(),
+                getSistemas()
             ]);
-            setSystems(Array.isArray(systemsData) ? systemsData : []);
             setApps(Array.isArray(appsData) ? appsData : []);
+            setSystems(Array.isArray(systemsData) ? systemsData : []);
         } catch (error) {
             console.error("Error loading systems data:", error);
         } finally {
@@ -81,18 +80,26 @@ export default function AdminSystemsPage() {
             const res = await syncPermissions(slug);
             // El backend usa StandardAPIView que envuelve la respuesta en 'results'
             const data = res.results || res;
-            alert(`Sincronización exitosa: ${data.resumen.total} permisos totales.`);
+            console.log('Sync result:', data);
+            alert(`Sincronización exitosa: ${data.total || 0} permisos totales.`);
         } catch (error: any) {
+            console.error('Error synchronizing permissions:', error);
             alert(`Error sincronizando: ${error.message}`);
         }
     };
 
     const handleSave = async (systemData: Partial<Sistema>, appData: Partial<Aplicacion>) => {
         try {
-            await Promise.all([
-                saveSistema(systemData),
-                saveAplicacion(appData)
-            ]);
+            // Migrado a access_control: la fuente de verdad es Aplicacion.
+            await saveAplicacion({
+                ...appData,
+                slug: appData.slug || systemData.codigo,
+                nombre: appData.nombre || systemData.nombre,
+                descripcion: appData.descripcion || systemData.descripcion,
+                color: appData.color || systemData.color,
+                icon: appData.icon || systemData.icono,
+                url_frontend: appData.url_frontend || systemData.url,
+            });
             setIsFormOpen(false);
             await loadData();
         } catch (error) {

@@ -5,7 +5,7 @@ export interface Role {
 }
 
 export interface Permission {
-    id: number;
+    id: string | number;
     name: string;
     codename: string;
 }
@@ -70,8 +70,8 @@ export const getPermissions = async (aplicacionId?: string): Promise<Permission[
 export interface GroupAplicacion {
     id?: string;
     group: number | string;
-    aplicacion: string;
-    permissions: number[];
+    aplicacion: string; // slug de aplicacion
+    permissions: Array<string | number>;
 }
 
 export const assignPermissionsToGroup = async (data: GroupAplicacion): Promise<void> => {

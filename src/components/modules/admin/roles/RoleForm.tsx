@@ -15,7 +15,7 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
     const [apps, setApps] = useState<Aplicacion[]>([]);
     const [permissions, setPermissions] = useState<Permission[]>([]);
     // Mapa de aplicacionId -> lista de IDs de permisos
-    const [localAssignments, setLocalAssignments] = useState<Record<string, number[]>>({});
+    const [localAssignments, setLocalAssignments] = useState<Record<string, Array<string | number>>>({});
     const [selectedApp, setSelectedApp] = useState<Aplicacion | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -41,7 +41,7 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
             if (role) {
                 const existingAssignments = await getGroupAplicacions(role.id);
                 // Convertir lista a mapa para fácil manejo
-                const map: Record<string, number[]> = {};
+                const map: Record<string, Array<string | number>> = {};
                 existingAssignments.forEach(a => {
                     map[a.aplicacion] = a.permissions;
                 });
@@ -62,13 +62,13 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
 
     useEffect(() => {
         if (selectedApp) {
-            loadPermissions(selectedApp.id);
+            loadPermissions(selectedApp.slug || selectedApp.id);
         }
     }, [selectedApp]);
 
-    const loadPermissions = async (appId: string) => {
+    const loadPermissions = async (appSlug: string) => {
         try {
-            const permsData = await getPermissions(appId);
+            const permsData = await getPermissions(appSlug);
             setPermissions(permsData);
         } catch (error) {
             console.error("Error loading permissions:", error);
@@ -91,10 +91,10 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
         }
     };
 
-    const togglePermission = (permId: number) => {
+    const togglePermission = (permId: string | number) => {
         if (!selectedApp) return;
 
-        const appId = selectedApp.id;
+        const appId = selectedApp.slug || selectedApp.id;
         const currentPerms = localAssignments[appId] || [];
 
         const newPerms = currentPerms.includes(permId)
@@ -107,7 +107,7 @@ export default function RoleForm({ role, onSave, onClose }: RoleFormProps) {
         });
     };
 
-    const selectedPermissions = selectedApp ? (localAssignments[selectedApp.id] || []) : [];
+    const selectedPermissions = selectedApp ? (localAssignments[selectedApp.slug || selectedApp.id] || []) : [];
 
     const modalContent = (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
